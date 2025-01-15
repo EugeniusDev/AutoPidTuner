@@ -4,12 +4,14 @@ namespace AutoPidTuner.Common
     public class PidAnalyzer
     {
         private readonly FlightLogData _logData;
-        private const double MIN_SUSTAINED_INPUT_DURATION = 0.2; // Reduced from 0.3
+        private const double MIN_SUSTAINED_INPUT_DURATION = 0.2;
         private const double OSCILLATION_THRESHOLD = 50.0;
         private const double OVERSHOOT_THRESHOLD = 1.2;
         private const int MIN_OSCILLATION_COUNT = 3;
         private const double ANALYSIS_WINDOW = 0.1;
-        private const double INPUT_CHANGE_THRESHOLD = 20.0; // Reduced from 100 to be more sensitive
+        private const double INPUT_CHANGE_THRESHOLD = 20.0;
+
+        public Pids pidRecommendations { get; set; } = new();
 
         public bool Debug { get; set; } = false;
 
@@ -234,19 +236,21 @@ namespace AutoPidTuner.Common
         {
             var recommendations = new List<string>();
             var pidSettings = _logData.PidSettings[axis];
-
             if (analysis.HasOscillations)
             {
                 if (analysis.OscillationFrequency > 30) // High frequency oscillations
                 {
+                    pidRecommendations.PidValues[axis].D = pidSettings.D - pidSettings.D * .15d;
                     recommendations.Add($"Reduce {axis} D-term by 15-20% (currently {pidSettings.D:F1})");
                     if (pidSettings.P > 1.0)
                     {
+                        pidRecommendations.PidValues[axis].P = pidSettings.P - pidSettings.P * .1d;
                         recommendations.Add($"Consider reducing {axis} P-term by 10% (currently {pidSettings.P:F1})");
                     }
                 }
                 else // Low frequency oscillations
                 {
+                    pidRecommendations.PidValues[axis].P = pidSettings.P - pidSettings.P * .15d;
                     recommendations.Add($"Reduce {axis} P-term by 15-20% (currently {pidSettings.P:F1})");
                 }
             }
@@ -255,16 +259,20 @@ namespace AutoPidTuner.Common
             {
                 if (analysis.OvershootAmount > 0.5) // Significant overshoot
                 {
+                    pidRecommendations.PidValues[axis].P = pidSettings.P - pidSettings.P * .2d;
                     recommendations.Add($"Reduce {axis} P-term by 20% (currently {pidSettings.P:F1})");
+                    pidRecommendations.PidValues[axis].D = pidSettings.D + pidSettings.D * .1d;
                     recommendations.Add($"Consider increasing {axis} D-term by 10% (currently {pidSettings.D:F1})");
                 }
             }
 
             if (analysis.HasUndershoot)
             {
+                pidRecommendations.PidValues[axis].I = pidSettings.I + pidSettings.I * .15d;
                 recommendations.Add($"Increase {axis} I-term by 15% (currently {pidSettings.I:F1})");
                 if (pidSettings.FF > 0)
                 {
+                    pidRecommendations.PidValues[axis].FF = pidSettings.FF + pidSettings.FF * .1d;
                     recommendations.Add($"Consider increasing {axis} FF-term by 10% (currently {pidSettings.FF:F1})");
                 }
             }

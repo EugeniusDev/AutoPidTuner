@@ -88,10 +88,12 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock FontSize="18" Margin="10"
-                    x:Name="SolutionOverviewTextblock"
-                    Text="Solution here"/>
-                <!-- TODO gains here -->
+                <ScrollViewer>
+                    <TextBlock FontSize="18" Margin="10"
+                               TextWrapping="Wrap"
+                        x:Name="SolutionOverviewTextblock"
+                        Text="Solution here"/>
+                </ScrollViewer>
                 <Grid Grid.Column="1" Margin="10" Background="#eeeeee">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>

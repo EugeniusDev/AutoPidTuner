@@ -25,6 +25,7 @@ namespace AutoPidTuner
         private string solutionOverview = string.Empty;
         private string cliCommands = Strings.minus;
         private readonly List<TextBlock> pidValuesTextboxes = [];
+        private Pids recommendedPids = new();
         public MainWindow()
         {
             InitializeComponent();
@@ -58,7 +59,7 @@ namespace AutoPidTuner
 
         private void OpenFileButton_Click(object sender, RoutedEventArgs e)
         {
-            ResetStringValues();
+            ResetValues();
             ResetUi();
             OpenFileDialog openFileDialog = new()
             {
@@ -96,12 +97,12 @@ namespace AutoPidTuner
                 SetPidTunerStatus(AutoTunerStatuses.Error);
                 FilenameTextblock.Text = Strings.noFileOpened;
                 MessageBox.Show($"Could not provide recommendations. " +
-                    $"Check for file validity",
+                    $"Check for file validity or try flying more aggressively",
                     "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private void ResetStringValues()
+        private void ResetValues()
         {
             openedFilepath = Strings.noFileOpened;
             solutionOverview = string.Empty;
@@ -119,17 +120,17 @@ namespace AutoPidTuner
 
         private void FormRecommendations()
         {
-            //TODO form recs here, overwrite FlightLogData's pid values accordingly
             var analyzer = flightLogData!.CreateAnalyzer();
-            analyzer.Debug = true;  // Enable debugging output
+            // analyzer.Debug = true;
             var analyses = analyzer.AnalyzeFlightData();
-
+            recommendedPids = analyzer.pidRecommendations;
             StringBuilder sb = new();
             foreach (var analysis in analyses)
             {
                 sb.AppendLine($"Analysis for {analysis.Axis} axis:");
                 sb.AppendLine($"Analyzed {analysis.AnalyzedSegments.Count} segments");
                 sb.AppendLine(analysis.Recommendation);
+                sb.AppendLine();
             }
             solutionOverview = sb.ToString();
 
@@ -140,22 +141,55 @@ namespace AutoPidTuner
         {
             StringBuilder stringBuilder = new();
 
-            FlightLogData.PidCoefficients roll = flightLogData!.PidSettings["Roll"];
-            stringBuilder.AppendLine(string.Concat(CliStrings.p_roll, roll.P.ToString()));
-            stringBuilder.AppendLine(string.Concat(CliStrings.i_roll, roll.I.ToString()));
-            stringBuilder.AppendLine(string.Concat(CliStrings.d_roll, roll.D.ToString()));
-            stringBuilder.AppendLine(string.Concat(CliStrings.f_roll, roll.FF.ToString()));
+            FlightLogData.PidCoefficients roll = recommendedPids.PidValues["Roll"];
+            if (!roll.P.Equals(0d))
+            {
+                stringBuilder.AppendLine(string.Concat(CliStrings.p_roll, roll.P.ToString()));
+            }
+            if (!roll.I.Equals(0d))
+            {
+                stringBuilder.AppendLine(string.Concat(CliStrings.i_roll, roll.I.ToString()));
+            }
+            if (!roll.D.Equals(0d))
+            {
+                stringBuilder.AppendLine(string.Concat(CliStrings.d_roll, roll.D.ToString()));
+            }
+            if (!roll.FF.Equals(0d))
+            {
+                stringBuilder.AppendLine(string.Concat(CliStrings.f_roll, roll.FF.ToString()));
+            }
 
-            FlightLogData.PidCoefficients pitch = flightLogData.PidSettings["Pitch"];
-            stringBuilder.AppendLine(string.Concat(CliStrings.p_pitch, pitch.P.ToString()));
-            stringBuilder.AppendLine(string.Concat(CliStrings.i_pitch, pitch.I.ToString()));
-            stringBuilder.AppendLine(string.Concat(CliStrings.d_pitch, pitch.D.ToString()));
-            stringBuilder.AppendLine(string.Concat(CliStrings.f_pitch, pitch.FF.ToString()));
+            FlightLogData.PidCoefficients pitch = recommendedPids.PidValues["Pitch"];
+            if (!pitch.P.Equals(0d))
+            {
+                stringBuilder.AppendLine(string.Concat(CliStrings.p_pitch, pitch.P.ToString()));
+            }
+            if (!pitch.I.Equals(0d))
+            {
+                stringBuilder.AppendLine(string.Concat(CliStrings.i_pitch, pitch.I.ToString()));
+            }
+            if (!pitch.D.Equals(0d))
+            {
+                stringBuilder.AppendLine(string.Concat(CliStrings.d_pitch, pitch.D.ToString()));
+            }
+            if (!pitch.FF.Equals(0d))
+            {
+                stringBuilder.AppendLine(string.Concat(CliStrings.f_pitch, pitch.FF.ToString()));
+            }
 
-            FlightLogData.PidCoefficients yaw = flightLogData.PidSettings["Yaw"];
-            stringBuilder.AppendLine(string.Concat(CliStrings.p_yaw, yaw.P.ToString()));
-            stringBuilder.AppendLine(string.Concat(CliStrings.i_yaw, yaw.I.ToString()));
-            stringBuilder.AppendLine(string.Concat(CliStrings.f_yaw, yaw.FF.ToString()));
+            FlightLogData.PidCoefficients yaw = recommendedPids.PidValues["Yaw"];
+            if (!yaw.P.Equals(0d))
+            {
+                stringBuilder.AppendLine(string.Concat(CliStrings.p_yaw, yaw.P.ToString()));
+            }
+            if (!yaw.I.Equals(0d))
+            {
+                stringBuilder.AppendLine(string.Concat(CliStrings.i_yaw, yaw.I.ToString()));
+            }
+            if (!yaw.FF.Equals(0d))
+            {
+                stringBuilder.AppendLine(string.Concat(CliStrings.f_yaw, yaw.FF.ToString()));
+            }
 
             cliCommands = stringBuilder.ToString();
         }
@@ -169,22 +203,22 @@ namespace AutoPidTuner
 
         private void PopulateRecommendationsTableWithFlightLogData()
         {
-            FlightLogData.PidCoefficients roll = flightLogData!.PidSettings["Roll"];
-            RollP.Text = roll.P.ToString();
-            RollI.Text = roll.I.ToString();
-            RollD.Text = roll.D.ToString();
-            RollFF.Text = roll.FF.ToString();
+            FlightLogData.PidCoefficients roll = recommendedPids.PidValues["Roll"];
+            RollP.Text = roll.P.Equals(0d) ? Strings.minus : roll.P.ToString();
+            RollI.Text = roll.I.Equals(0d) ? Strings.minus : roll.I.ToString();
+            RollD.Text = roll.D.Equals(0d) ? Strings.minus : roll.D.ToString();
+            RollFF.Text = roll.FF.Equals(0d) ? Strings.minus : roll.FF.ToString();
 
-            FlightLogData.PidCoefficients pitch = flightLogData.PidSettings["Pitch"];
-            PitchP.Text = pitch.P.ToString();
-            PitchI.Text = pitch.I.ToString();
-            PitchD.Text = pitch.D.ToString();
-            PitchFF.Text = pitch.FF.ToString();
+            FlightLogData.PidCoefficients pitch = recommendedPids.PidValues["Pitch"];
+            PitchP.Text = pitch.P.Equals(0d) ? Strings.minus : pitch.P.ToString();
+            PitchI.Text = pitch.I.Equals(0d) ? Strings.minus : pitch.I.ToString();
+            PitchD.Text = pitch.D.Equals(0d) ? Strings.minus : pitch.D.ToString();
+            PitchFF.Text = pitch.FF.Equals(0d) ? Strings.minus : pitch.FF.ToString();
 
-            FlightLogData.PidCoefficients yaw = flightLogData.PidSettings["Yaw"];
-            YawP.Text = yaw.P.ToString();
-            YawI.Text = yaw.I.ToString();
-            YawFF.Text = yaw.FF.ToString();
+            FlightLogData.PidCoefficients yaw = recommendedPids.PidValues["Yaw"];
+            YawP.Text = yaw.P.Equals(0d) ? Strings.minus : yaw.P.ToString();
+            YawI.Text = yaw.I.Equals(0d) ? Strings.minus : yaw.I.ToString();
+            YawFF.Text = yaw.FF.Equals(0d) ? Strings.minus : yaw.FF.ToString();
         }
 
         private void CopyCliCommandsButton_Click(object sender, RoutedEventArgs e)
