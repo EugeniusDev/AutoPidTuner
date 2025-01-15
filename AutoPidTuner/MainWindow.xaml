@@ -35,7 +35,7 @@
                         Text="No"/>
                     <StatusBarItem FontSize="14" Content="file is opened"/>
                 </StatusBar>
-                <Button Margin="10 2" FontSize="24"
+                <Button Margin="10 2" FontSize="24" MinWidth="500"
                     x:Name="OpenFileButton" Click="OpenFileButton_Click"
                     Content="Open log file (converted in .csv)"/>
             </StackPanel>
@@ -43,8 +43,9 @@
         
         <!-- Status bar (Section 2 of main grid) -->
         <StatusBar Grid.Row="1" HorizontalAlignment="Center">
-            <StatusBarItem FontSize="14" Content="Auto PID Tuner status: "/>
-            <TextBlock FontSize="16" Foreground="MediumAquamarine"
+            <StatusBarItem FontSize="14" Margin="20 0 0 0"
+                           Content="Auto PID Tuner status: "/>
+            <TextBlock FontSize="16" Margin="0 0 20 0" Foreground="MediumAquamarine"
                 x:Name="StatusTextblock"
                 Text="Status here"/>
         </StatusBar>
@@ -103,7 +104,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="1.3*"/>
                     </Grid.ColumnDefinitions>
 
                     <!-- Header Row -->
@@ -124,7 +125,7 @@
                     </Border>
                     <!-- PID Values for Roll -->
                     <Border BorderBrush="Black" BorderThickness="1" Grid.Row="1">
-                        <TextBlock Text="Roll" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="Roll" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <Border BorderBrush="Black" BorderThickness="1" Grid.Row="1" Grid.Column="1">
                         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" 
@@ -148,7 +149,7 @@
                     </Border>
                     <!-- PID Values for Pitch -->
                     <Border BorderBrush="Black" BorderThickness="1" Grid.Row="2">
-                        <TextBlock Text="Pitch" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="Pitch" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <Border BorderBrush="Black" BorderThickness="1" Grid.Row="2" Grid.Column="1">
                         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" 
@@ -172,7 +173,7 @@
                     </Border>
                     <!-- PID Values for Yaw -->
                     <Border BorderBrush="Black" BorderThickness="1" Grid.Row="3">
-                        <TextBlock Text="Yaw" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <TextBlock Text="Yaw" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <Border BorderBrush="Black" BorderThickness="1" Grid.Row="3" Grid.Column="1">
                         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"

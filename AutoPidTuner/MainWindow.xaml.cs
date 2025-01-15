@@ -1,5 +1,6 @@
 ﻿using AutoPidTuner.Common;
 using Microsoft.Win32;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -57,6 +58,7 @@ namespace AutoPidTuner
 
         private void OpenFileButton_Click(object sender, RoutedEventArgs e)
         {
+            ResetStringValues();
             ResetUi();
             OpenFileDialog openFileDialog = new()
             {
@@ -99,6 +101,13 @@ namespace AutoPidTuner
             }
         }
 
+        private void ResetStringValues()
+        {
+            openedFilepath = Strings.noFileOpened;
+            solutionOverview = string.Empty;
+            cliCommands = Strings.minus;
+        }
+
         private void PopulateUiWithGeneralData()
         {
             FilenameTextblock.Text = openedFilepath;
@@ -111,10 +120,44 @@ namespace AutoPidTuner
         private void FormRecommendations()
         {
             //TODO form recs here, overwrite FlightLogData's pid values accordingly
+            var analyzer = flightLogData!.CreateAnalyzer();
+            analyzer.Debug = true;  // Enable debugging output
+            var analyses = analyzer.AnalyzeFlightData();
 
-            //TODO populate next variables
-            //solutionOverview
-            //cliCommands
+            StringBuilder sb = new();
+            foreach (var analysis in analyses)
+            {
+                sb.AppendLine($"Analysis for {analysis.Axis} axis:");
+                sb.AppendLine($"Analyzed {analysis.AnalyzedSegments.Count} segments");
+                sb.AppendLine(analysis.Recommendation);
+            }
+            solutionOverview = sb.ToString();
+
+            FormCliCommands();
+        }
+
+        private void FormCliCommands()
+        {
+            StringBuilder stringBuilder = new();
+
+            FlightLogData.PidCoefficients roll = flightLogData!.PidSettings["Roll"];
+            stringBuilder.AppendLine(string.Concat(CliStrings.p_roll, roll.P.ToString()));
+            stringBuilder.AppendLine(string.Concat(CliStrings.i_roll, roll.I.ToString()));
+            stringBuilder.AppendLine(string.Concat(CliStrings.d_roll, roll.D.ToString()));
+            stringBuilder.AppendLine(string.Concat(CliStrings.f_roll, roll.FF.ToString()));
+
+            FlightLogData.PidCoefficients pitch = flightLogData.PidSettings["Pitch"];
+            stringBuilder.AppendLine(string.Concat(CliStrings.p_pitch, pitch.P.ToString()));
+            stringBuilder.AppendLine(string.Concat(CliStrings.i_pitch, pitch.I.ToString()));
+            stringBuilder.AppendLine(string.Concat(CliStrings.d_pitch, pitch.D.ToString()));
+            stringBuilder.AppendLine(string.Concat(CliStrings.f_pitch, pitch.FF.ToString()));
+
+            FlightLogData.PidCoefficients yaw = flightLogData.PidSettings["Yaw"];
+            stringBuilder.AppendLine(string.Concat(CliStrings.p_yaw, yaw.P.ToString()));
+            stringBuilder.AppendLine(string.Concat(CliStrings.i_yaw, yaw.I.ToString()));
+            stringBuilder.AppendLine(string.Concat(CliStrings.f_yaw, yaw.FF.ToString()));
+
+            cliCommands = stringBuilder.ToString();
         }
 
         private void DisplaySolution()
