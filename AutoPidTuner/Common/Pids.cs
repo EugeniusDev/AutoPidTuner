@@ -1,14 +1,17 @@
-﻿using static AutoPidTuner.Common.FlightLogData;
-
-namespace AutoPidTuner.Common
+﻿namespace AutoPidTuner.Common
 {
     public class Pids
     {
-        public Dictionary<string, PidCoefficients> PidValues = new()
+        private readonly Dictionary<string, PidCoefficients> _pidValues = new()
         {
-            { "Roll", new() },
-            { "Pitch", new() },
-            { "Yaw", new() }
+            { "Roll", new PidCoefficients() },
+            { "Pitch", new PidCoefficients() },
+            { "Yaw", new PidCoefficients() }
         };
+
+        public Dictionary<string, PidCoefficients> PidValues
+        {
+            get => _pidValues;
+        }
     }
 }

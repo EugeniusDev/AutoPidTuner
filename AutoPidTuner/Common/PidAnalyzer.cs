@@ -1,65 +1,45 @@
-﻿
-namespace AutoPidTuner.Common
+﻿namespace AutoPidTuner.Common
 {
-    public class PidAnalyzer
+    public class PidAnalyzer(FlightLogData logData)
     {
-        private readonly FlightLogData _logData;
-        private const double MIN_SUSTAINED_INPUT_DURATION = 0.2;
-        private const double OSCILLATION_THRESHOLD = 50.0;
-        private const double OVERSHOOT_THRESHOLD = 1.2;
-        private const int MIN_OSCILLATION_COUNT = 3;
-        private const double ANALYSIS_WINDOW = 0.1;
-        private const double INPUT_CHANGE_THRESHOLD = 20.0;
-
-        public Pids pidRecommendations { get; set; } = new();
-
+        public Pids PidRecommendations { get; set; } = new();
         public bool Debug { get; set; } = false;
 
-        public class AxisAnalysis
-        {
-            public string Axis { get; set; }
-            public bool HasOscillations { get; set; }
-            public bool HasOvershoot { get; set; }
-            public bool HasUndershoot { get; set; }
-            public double OscillationFrequency { get; set; }
-            public double OscillationAmplitude { get; set; }
-            public double OvershootAmount { get; set; }
-            public string Recommendation { get; set; }
-            public List<(double startTime, double endTime)> AnalyzedSegments { get; set; } = new List<(double, double)>();
-        }
-
-        public PidAnalyzer(FlightLogData logData)
-        {
-            _logData = logData;
-        }
-
+        private readonly FlightLogData _logData = logData;
+        private const double MIN_SUSTAINED_INPUT_DURATION = 0.2;
+        private const double OVERSHOOT_THRESHOLD = 1.2;
+        private const int MIN_OSCILLATION_COUNT = 3;
+        private const double INPUT_CHANGE_THRESHOLD = 20.0;
+        private const int indexOfFirst = 1;
+        private const int indexOfLast = -1;
         public List<AxisAnalysis> AnalyzeFlightData()
         {
             var analyses = new List<AxisAnalysis>();
-            string[] axes = { "Roll", "Pitch", "Yaw" };
 
             if (Debug)
             {
                 Console.WriteLine($"Total data points: {_logData.TimeStamps.Count}");
-                Console.WriteLine($"Time range: {_logData.TimeStamps.First():F3}s to {_logData.TimeStamps.Last():F3}s");
+                Console.WriteLine($"Time range: {_logData.TimeStamps[indexOfFirst]:F3}s to {_logData.TimeStamps[indexOfLast]:F3}s");
             }
 
             for (int axis = 0; axis < 3; axis++)
             {
                 if (Debug)
                 {
-                    Console.WriteLine($"\nAnalyzing {axes[axis]} axis...");
+                    Console.WriteLine($"\nAnalyzing {Strings.axesToOptimize[axis]} axis...");
                 }
 
-                var analysis = new AxisAnalysis { Axis = axes[axis] };
+                var analysis = new AxisAnalysis { Axis = Strings.axesToOptimize[axis] };
                 var sustainedInputs = FindSustainedInputs(axis);
 
                 if (Debug)
                 {
-                    Console.WriteLine($"Found {sustainedInputs.Count} sustained inputs for {axes[axis]}");
+                    Console.WriteLine($"Found {sustainedInputs.Count} sustained inputs " +
+                        $"for {Strings.axesToOptimize[axis]}");
                     foreach (var (startIdx, endIdx) in sustainedInputs)
                     {
-                        Console.WriteLine($"Segment: {_logData.TimeStamps[startIdx]:F3}s to {_logData.TimeStamps[endIdx]:F3}s");
+                        Console.WriteLine($"Segment: {_logData.TimeStamps[startIdx]:F3}s " +
+                            $"to {_logData.TimeStamps[endIdx]:F3}s");
                     }
                 }
 
@@ -71,7 +51,7 @@ namespace AutoPidTuner.Common
                         AnalyzeResponse(axis, startIdx, endIdx, analysis);
                     }
 
-                    analysis.Recommendation = GenerateRecommendation(analysis, axes[axis]);
+                    analysis.Recommendation = GenerateRecommendation(analysis, Strings.axesToOptimize[axis]);
                     analyses.Add(analysis);
                 }
             }
@@ -136,7 +116,7 @@ namespace AutoPidTuner.Common
             // Handle case where we're still in a sustained input at the end of the log
             if (startIdx != null)
             {
-                double duration = _logData.TimeStamps.Last() - _logData.TimeStamps[startIdx.Value];
+                double duration = _logData.TimeStamps[indexOfLast] - _logData.TimeStamps[startIdx.Value];
                 if (duration >= MIN_SUSTAINED_INPUT_DURATION)
                 {
                     sustainedInputs.Add((startIdx.Value, _logData.TimeStamps.Count - 1));
@@ -171,7 +151,7 @@ namespace AutoPidTuner.Common
             if (crossings.Count >= MIN_OSCILLATION_COUNT)
             {
                 analysis.HasOscillations = true;
-                analysis.OscillationFrequency = crossings.Count / (times.Last() - times.First());
+                analysis.OscillationFrequency = crossings.Count / (times[indexOfLast] - times[indexOfFirst]);
                 analysis.OscillationAmplitude = CalculateAverageAmplitude(gyroValues, rcValues);
 
                 if (Debug)
@@ -180,7 +160,6 @@ namespace AutoPidTuner.Common
                 }
             }
 
-            // Detect overshoots with improved sensitivity
             double maxResponse = gyroValues.Max();
             double minResponse = gyroValues.Min();
 
@@ -195,7 +174,6 @@ namespace AutoPidTuner.Common
                 }
             }
 
-            // Detect undershoots with improved sensitivity
             if (responseRange > 0 && Math.Abs(minResponse - targetResponse) > responseRange * 0.3)
             {
                 analysis.HasUndershoot = true;
@@ -207,7 +185,7 @@ namespace AutoPidTuner.Common
             }
         }
 
-        private List<int> FindZeroCrossings(List<double> gyroValues, List<double> rcValues)
+        private static List<int> FindZeroCrossings(List<double> gyroValues, List<double> rcValues)
         {
             var crossings = new List<int>();
             double target = rcValues.Average();
@@ -226,7 +204,7 @@ namespace AutoPidTuner.Common
             return crossings;
         }
 
-        private double CalculateAverageAmplitude(List<double> gyroValues, List<double> rcValues)
+        private static double CalculateAverageAmplitude(List<double> gyroValues, List<double> rcValues)
         {
             double target = rcValues.Average();
             return gyroValues.Select(v => Math.Abs(v - target)).Average();
@@ -240,44 +218,41 @@ namespace AutoPidTuner.Common
             {
                 if (analysis.OscillationFrequency > 30) // High frequency oscillations
                 {
-                    pidRecommendations.PidValues[axis].D = pidSettings.D - pidSettings.D * .15d;
+                    PidRecommendations.PidValues[axis].D = pidSettings.D - pidSettings.D * .15d;
                     recommendations.Add($"Reduce {axis} D-term by 15-20% (currently {pidSettings.D:F1})");
                     if (pidSettings.P > 1.0)
                     {
-                        pidRecommendations.PidValues[axis].P = pidSettings.P - pidSettings.P * .1d;
+                        PidRecommendations.PidValues[axis].P = pidSettings.P - pidSettings.P * .1d;
                         recommendations.Add($"Consider reducing {axis} P-term by 10% (currently {pidSettings.P:F1})");
                     }
                 }
                 else // Low frequency oscillations
                 {
-                    pidRecommendations.PidValues[axis].P = pidSettings.P - pidSettings.P * .15d;
+                    PidRecommendations.PidValues[axis].P = pidSettings.P - pidSettings.P * .15d;
                     recommendations.Add($"Reduce {axis} P-term by 15-20% (currently {pidSettings.P:F1})");
                 }
             }
 
-            if (analysis.HasOvershoot)
+            if (analysis.HasOvershoot && analysis.OvershootAmount > 0.5)
             {
-                if (analysis.OvershootAmount > 0.5) // Significant overshoot
-                {
-                    pidRecommendations.PidValues[axis].P = pidSettings.P - pidSettings.P * .2d;
-                    recommendations.Add($"Reduce {axis} P-term by 20% (currently {pidSettings.P:F1})");
-                    pidRecommendations.PidValues[axis].D = pidSettings.D + pidSettings.D * .1d;
-                    recommendations.Add($"Consider increasing {axis} D-term by 10% (currently {pidSettings.D:F1})");
-                }
+                PidRecommendations.PidValues[axis].P = pidSettings.P - pidSettings.P * .2d;
+                recommendations.Add($"Reduce {axis} P-term by 20% (currently {pidSettings.P:F1})");
+                PidRecommendations.PidValues[axis].D = pidSettings.D + pidSettings.D * .1d;
+                recommendations.Add($"Consider increasing {axis} D-term by 10% (currently {pidSettings.D:F1})");
             }
 
             if (analysis.HasUndershoot)
             {
-                pidRecommendations.PidValues[axis].I = pidSettings.I + pidSettings.I * .15d;
+                PidRecommendations.PidValues[axis].I = pidSettings.I + pidSettings.I * .15d;
                 recommendations.Add($"Increase {axis} I-term by 15% (currently {pidSettings.I:F1})");
                 if (pidSettings.FF > 0)
                 {
-                    pidRecommendations.PidValues[axis].FF = pidSettings.FF + pidSettings.FF * .1d;
+                    PidRecommendations.PidValues[axis].FF = pidSettings.FF + pidSettings.FF * .1d;
                     recommendations.Add($"Consider increasing {axis} FF-term by 10% (currently {pidSettings.FF:F1})");
                 }
             }
 
-            if (!recommendations.Any())
+            if (recommendations.Count == 0)
             {
                 return $"{axis} axis response looks good, no changes recommended.";
             }
@@ -294,15 +269,6 @@ namespace AutoPidTuner.Common
                 2 => vector.Z,
                 _ => throw new ArgumentOutOfRangeException(nameof(axis))
             };
-        }
-    }
-
-    // Extension method for FlightLogData to easily create analyzer
-    public static class FlightLogDataExtensions
-    {
-        public static PidAnalyzer CreateAnalyzer(this FlightLogData logData)
-        {
-            return new PidAnalyzer(logData);
         }
     }
 }

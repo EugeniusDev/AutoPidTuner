@@ -4,45 +4,19 @@ namespace AutoPidTuner.Common
 {
     public class FlightLogData
     {
-        // Static PID configuration
-        public class PidCoefficients
-        {
-            public double P { get; set; }
-            public double I { get; set; }
-            public double D { get; set; }
-            public double FF { get; set; }
-        }
-
         // Flight controller configuration
-        public string FirmwareVersion { get; private set; }
-        public string CraftName { get; private set; }
-        public Dictionary<string, PidCoefficients> PidSettings { get; private set; }
+        public string FirmwareVersion { get; private set; } = string.Empty;
+        public string CraftName { get; private set; } = string.Empty;
+        public Dictionary<string, PidCoefficients> PidSettings { get; private set; } = [];
 
         // Time series data
-        public List<double> TimeStamps { get; private set; }
-        public List<Vector3> PidP { get; private set; }
-        public List<Vector3> PidI { get; private set; }
-        public List<Vector3> PidD { get; private set; }
-        public List<Vector3> PidF { get; private set; }
-        public List<Vector3> RcCommands { get; private set; }
-        public List<Vector3> GyroData { get; private set; }
-
-        public FlightLogData()
-        {
-            PidSettings = new Dictionary<string, PidCoefficients>();
-            InitializeLists();
-        }
-
-        private void InitializeLists()
-        {
-            TimeStamps = new List<double>();
-            PidP = new List<Vector3>();
-            PidI = new List<Vector3>();
-            PidD = new List<Vector3>();
-            PidF = new List<Vector3>();
-            RcCommands = new List<Vector3>();
-            GyroData = new List<Vector3>();
-        }
+        public List<double> TimeStamps { get; private set; } = [];
+        public List<Vector3> PidP { get; private set; } = [];
+        public List<Vector3> PidI { get; private set; } = [];
+        public List<Vector3> PidD { get; private set; } = [];
+        public List<Vector3> PidF { get; private set; } = [];
+        public List<Vector3> RcCommands { get; private set; } = [];
+        public List<Vector3> GyroData { get; private set; } = [];
 
         public static FlightLogData FromCsv(string filePath)
         {
@@ -76,7 +50,7 @@ namespace AutoPidTuner.Common
             // Parse configuration data
             foreach (var line in configSection)
             {
-                var parts = line.Split(new[] { ',' }, 2); // Split only on first comma
+                var parts = line.Split([','], 2); // Split only on first comma
                 if (parts.Length != 2) continue;
 
                 var key = parts[0].Trim('"');
@@ -197,20 +171,13 @@ namespace AutoPidTuner.Common
         }
     }
 
-    public struct Vector3
+    public struct Vector3(double x, double y, double z)
     {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double Z { get; set; }
+        public double X { get; set; } = x;
+        public double Y { get; set; } = y;
+        public double Z { get; set; } = z;
 
-        public Vector3(double x, double y, double z)
-        {
-            X = x;
-            Y = y;
-            Z = z;
-        }
-
-        public override string ToString()
+        public override readonly string ToString()
         {
             return $"({X}, {Y}, {Z})";
         }

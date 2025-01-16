@@ -24,7 +24,7 @@ namespace AutoPidTuner
         private string openedFilepath = string.Empty;
         private string solutionOverview = string.Empty;
         private string cliCommands = Strings.minus;
-        private readonly List<TextBlock> pidValuesTextboxes = [];
+        private readonly List<TextBlock> pidValuesTextboxes;
         private Pids recommendedPids = new();
         public MainWindow()
         {
@@ -87,7 +87,7 @@ namespace AutoPidTuner
                 FormRecommendations();
                 if (string.IsNullOrWhiteSpace(solutionOverview))
                 {
-                    throw new Exception("No recommendations were formed");
+                    throw new ArgumentException("No recommendations were formed");
                 }
 
                 DisplaySolution();
@@ -121,9 +121,8 @@ namespace AutoPidTuner
         private void FormRecommendations()
         {
             var analyzer = flightLogData!.CreateAnalyzer();
-            // analyzer.Debug = true;
             var analyses = analyzer.AnalyzeFlightData();
-            recommendedPids = analyzer.pidRecommendations;
+            recommendedPids = analyzer.PidRecommendations;
             StringBuilder sb = new();
             foreach (var analysis in analyses)
             {
@@ -140,58 +139,20 @@ namespace AutoPidTuner
         private void FormCliCommands()
         {
             StringBuilder stringBuilder = new();
-
-            FlightLogData.PidCoefficients roll = recommendedPids.PidValues["Roll"];
-            if (!roll.P.Equals(0d))
+            foreach (string axis in Strings.axesToOptimize)
             {
-                stringBuilder.AppendLine(string.Concat(CliStrings.p_roll, roll.P.ToString()));
+                var pid = recommendedPids.PidValues[axis];
+                AppendPidCliCommands(stringBuilder, axis, pid);
             }
-            if (!roll.I.Equals(0d))
-            {
-                stringBuilder.AppendLine(string.Concat(CliStrings.i_roll, roll.I.ToString()));
-            }
-            if (!roll.D.Equals(0d))
-            {
-                stringBuilder.AppendLine(string.Concat(CliStrings.d_roll, roll.D.ToString()));
-            }
-            if (!roll.FF.Equals(0d))
-            {
-                stringBuilder.AppendLine(string.Concat(CliStrings.f_roll, roll.FF.ToString()));
-            }
-
-            FlightLogData.PidCoefficients pitch = recommendedPids.PidValues["Pitch"];
-            if (!pitch.P.Equals(0d))
-            {
-                stringBuilder.AppendLine(string.Concat(CliStrings.p_pitch, pitch.P.ToString()));
-            }
-            if (!pitch.I.Equals(0d))
-            {
-                stringBuilder.AppendLine(string.Concat(CliStrings.i_pitch, pitch.I.ToString()));
-            }
-            if (!pitch.D.Equals(0d))
-            {
-                stringBuilder.AppendLine(string.Concat(CliStrings.d_pitch, pitch.D.ToString()));
-            }
-            if (!pitch.FF.Equals(0d))
-            {
-                stringBuilder.AppendLine(string.Concat(CliStrings.f_pitch, pitch.FF.ToString()));
-            }
-
-            FlightLogData.PidCoefficients yaw = recommendedPids.PidValues["Yaw"];
-            if (!yaw.P.Equals(0d))
-            {
-                stringBuilder.AppendLine(string.Concat(CliStrings.p_yaw, yaw.P.ToString()));
-            }
-            if (!yaw.I.Equals(0d))
-            {
-                stringBuilder.AppendLine(string.Concat(CliStrings.i_yaw, yaw.I.ToString()));
-            }
-            if (!yaw.FF.Equals(0d))
-            {
-                stringBuilder.AppendLine(string.Concat(CliStrings.f_yaw, yaw.FF.ToString()));
-            }
-
             cliCommands = stringBuilder.ToString();
+        }
+
+        private static void AppendPidCliCommands(StringBuilder sb, string axis, PidCoefficients pid)
+        {
+            if (!pid.P.Equals(0d)) sb.AppendLine($"{CliStrings.GetCommand(axis, "P")}{pid.P}");
+            if (!pid.I.Equals(0d)) sb.AppendLine($"{CliStrings.GetCommand(axis, "I")}{pid.I}");
+            if (!pid.D.Equals(0d)) sb.AppendLine($"{CliStrings.GetCommand(axis, "D")}{pid.D}");
+            if (!pid.FF.Equals(0d)) sb.AppendLine($"{CliStrings.GetCommand(axis, "FF")}{pid.FF}");
         }
 
         private void DisplaySolution()
@@ -203,22 +164,40 @@ namespace AutoPidTuner
 
         private void PopulateRecommendationsTableWithFlightLogData()
         {
-            FlightLogData.PidCoefficients roll = recommendedPids.PidValues["Roll"];
-            RollP.Text = roll.P.Equals(0d) ? Strings.minus : roll.P.ToString();
-            RollI.Text = roll.I.Equals(0d) ? Strings.minus : roll.I.ToString();
-            RollD.Text = roll.D.Equals(0d) ? Strings.minus : roll.D.ToString();
-            RollFF.Text = roll.FF.Equals(0d) ? Strings.minus : roll.FF.ToString();
+            foreach (string axis in Strings.axesToOptimize)
+            {
+                var pid = recommendedPids.PidValues[axis];
+                PopulatePidValues(axis, pid);
+            }
+        }
 
-            FlightLogData.PidCoefficients pitch = recommendedPids.PidValues["Pitch"];
-            PitchP.Text = pitch.P.Equals(0d) ? Strings.minus : pitch.P.ToString();
-            PitchI.Text = pitch.I.Equals(0d) ? Strings.minus : pitch.I.ToString();
-            PitchD.Text = pitch.D.Equals(0d) ? Strings.minus : pitch.D.ToString();
-            PitchFF.Text = pitch.FF.Equals(0d) ? Strings.minus : pitch.FF.ToString();
+        private void PopulatePidValues(string axis, PidCoefficients pid)
+        {
+            switch (axis)
+            {
+                case "Roll":
+                    RollP.Text = FormatPidValue(pid.P);
+                    RollI.Text = FormatPidValue(pid.I);
+                    RollD.Text = FormatPidValue(pid.D);
+                    RollFF.Text = FormatPidValue(pid.FF);
+                    break;
+                case "Pitch":
+                    PitchP.Text = FormatPidValue(pid.P);
+                    PitchI.Text = FormatPidValue(pid.I);
+                    PitchD.Text = FormatPidValue(pid.D);
+                    PitchFF.Text = FormatPidValue(pid.FF);
+                    break;
+                case "Yaw":
+                    YawP.Text = FormatPidValue(pid.P);
+                    YawI.Text = FormatPidValue(pid.I);
+                    YawFF.Text = FormatPidValue(pid.FF);
+                    break;
+            }
+        }
 
-            FlightLogData.PidCoefficients yaw = recommendedPids.PidValues["Yaw"];
-            YawP.Text = yaw.P.Equals(0d) ? Strings.minus : yaw.P.ToString();
-            YawI.Text = yaw.I.Equals(0d) ? Strings.minus : yaw.I.ToString();
-            YawFF.Text = yaw.FF.Equals(0d) ? Strings.minus : yaw.FF.ToString();
+        private static string FormatPidValue(double value)
+        {
+            return value.Equals(0d) ? Strings.minus : value.ToString();
         }
 
         private void CopyCliCommandsButton_Click(object sender, RoutedEventArgs e)
