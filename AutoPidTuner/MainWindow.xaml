@@ -6,95 +6,111 @@
         xmlns:local="clr-namespace:AutoPidTuner"
         mc:Ignorable="d"
         Title="Automatic PID tuner" 
-        Height="700" Width="800"
+        Height="750" Width="800"
         WindowStartupLocation="CenterScreen">
     <Grid Margin="10 0">
-        <!-- Main grid definition -->
         <Grid.RowDefinitions>
             <RowDefinition Height="3*"/>
             <RowDefinition Height="1*"/>
-            <RowDefinition Height="4*"/>
+            <RowDefinition Height="3*"/>
             <RowDefinition Height="7*"/>
         </Grid.RowDefinitions>
 
-        <!-- Input info (Section 1 of main grid) -->
+        <!-- Input Info Section -->
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="1*"/>
                 <RowDefinition Height="3*"/>
             </Grid.RowDefinitions>
-            
+
             <Label HorizontalAlignment="Center"
                    FontSize="20" FontWeight="Bold"
-                Content="Input Info"/>
+                   Content="Input Info"/>
 
             <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
                 <StatusBar Margin="0 4">
                     <TextBlock FontSize="16" Foreground="#22aabb"
-                        x:Name="FilenameTextblock"
-                        Text="No"/>
+                               x:Name="FilenameTextblock"
+                               Text="No"/>
                     <StatusBarItem FontSize="14" Content="file is opened"/>
                 </StatusBar>
                 <Button Margin="10 2" FontSize="24" MinWidth="500"
-                    x:Name="OpenFileButton" Click="OpenFileButton_Click"
-                    Content="Open log file (converted in .csv)"/>
+                        x:Name="OpenFileButton" Click="OpenFileButton_Click"
+                        Content="Open log file (converted in .csv)"/>
             </StackPanel>
         </Grid>
-        
-        <!-- Status bar (Section 2 of main grid) -->
+
+        <!-- Status Bar Section -->
         <StatusBar Grid.Row="1" HorizontalAlignment="Center">
             <StatusBarItem FontSize="14" Margin="20 0 0 0"
                            Content="Auto PID Tuner status: "/>
             <TextBlock FontSize="16" Margin="0 0 20 0" Foreground="MediumAquamarine"
-                x:Name="StatusTextblock"
-                Text="Status here"/>
+                       x:Name="StatusTextblock"
+                       Text="Status here"/>
         </StatusBar>
 
-        <!-- Current situation overview (Section 3 of main grid) -->
+        <!-- Aircraft Info Section -->
         <StackPanel Grid.Row="2" Margin="0 6">
             <Label FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"
-                   Content="Aircraft info"/>
+                   Content="Aircraft Info"/>
+
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="1*"/>
                     <ColumnDefinition Width="2*"/>
                 </Grid.ColumnDefinitions>
+
                 <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center">
                     <TextBlock FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Right" Margin="6"
-                        Text="Firmware: "/>
+                               Text="Firmware: "/>
                     <TextBlock FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Right" Margin="6"
-                        Text="Craft: "/>
+                               Text="Craft: "/>
                     <TextBlock FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Right" Margin="6"
-                        Text="Data points: "/>
+                               Text="Data points: "/>
                 </StackPanel>
+
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
                     <TextBlock FontSize="18" Text="None" Margin="6"
-                        x:Name="FirmwareTextBlock"/>
+                               x:Name="FirmwareTextBlock"/>
                     <TextBlock FontSize="18" Text="None" Margin="6"
-                        x:Name="CraftTextBlock"/>
+                               x:Name="CraftTextBlock"/>
                     <TextBlock FontSize="18" Text="None" Margin="6"
-                        x:Name="DataPointsTextBlock"/>
+                               x:Name="DataPointsTextBlock"/>
                 </StackPanel>
             </Grid>
         </StackPanel>
-        
-        <!-- Solution overview (Section 4 of main grid) -->
+
+        <!-- Solution Overview Section -->
         <StackPanel Grid.Row="3">
             <Label FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"
-                   Content="Solution proposition"/>
+                   Content="Solution Proposition"/>
+
             <Grid MinHeight="170" MaxHeight="230">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
+                <!-- Solution Overview -->
                 <ScrollViewer>
-                    <TextBlock FontSize="18" Margin="10"
-                               TextWrapping="Wrap"
-                        x:Name="SolutionOverviewTextblock"
-                        Text="Solution here"/>
+                    <TextBlock FontSize="18" Margin="10" TextWrapping="Wrap"
+                               x:Name="SolutionOverviewTextblock"
+                               Text="Solution here"/>
                 </ScrollViewer>
+
+                <!-- PID Table -->
                 <Grid Grid.Column="1" Margin="10" Background="#eeeeee">
+                    <Grid.Resources>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                        <Style TargetType="Border">
+                            <Setter Property="BorderBrush" Value="Black"/>
+                            <Setter Property="BorderThickness" Value="1"/>
+                        </Style>
+                    </Grid.Resources>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="*"/>
@@ -110,101 +126,40 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Header Row -->
-                    <Border BorderBrush="Black" BorderThickness="1">
-                        <TextBlock Text="Axis" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Column="1">
-                        <TextBlock Text="P" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Column="2">
-                        <TextBlock Text="I" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Column="3">
-                        <TextBlock Text="D" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Column="4">
-                        <TextBlock Text="Feedforward" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <!-- PID Values for Roll -->
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Row="1">
-                        <TextBlock Text="Roll" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Row="1" Grid.Column="1">
-                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" 
-                            x:Name="RollP"
-                                   Text="33"/>
-                    </Border>
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Row="1" Grid.Column="2">
-                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" 
-                            x:Name="RollI"
-                            Text="30.0"/>
-                    </Border>
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Row="1" Grid.Column="3">
-                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" 
-                            x:Name="RollD"
-                            Text="23.0"/>
-                    </Border>
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Row="1" Grid.Column="4">
-                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" 
-                            x:Name="RollFF"
-                            Text="15.0"/>
-                    </Border>
-                    <!-- PID Values for Pitch -->
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Row="2">
-                        <TextBlock Text="Pitch" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Row="2" Grid.Column="1">
-                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" 
-                            x:Name="PitchP"
-                            Text="40.0"/>
-                    </Border>
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Row="2" Grid.Column="2">
-                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
-                            x:Name="PitchI"
-                            Text="30.0"/>
-                    </Border>
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Row="2" Grid.Column="3">
-                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" 
-                            x:Name="PitchD"
-                            Text="23.0"/>
-                    </Border>
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Row="2" Grid.Column="4">
-                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
-                            x:Name="PitchFF"
-                            Text="15.0"/>
-                    </Border>
-                    <!-- PID Values for Yaw -->
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Row="3">
-                        <TextBlock Text="Yaw" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Row="3" Grid.Column="1">
-                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
-                            x:Name="YawP"
-                            Text="40.0"/>
-                    </Border>
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Row="3" Grid.Column="2">
-                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
-                            x:Name="YawI"
-                            Text="40.0"/>
-                    </Border>
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Row="3" Grid.Column="3">
-                        <TextBlock Text="-" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <Border BorderBrush="Black" BorderThickness="1" Grid.Row="3" Grid.Column="4">
-                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
-                            x:Name="YawFF"
-                            Text="40.0"/>
-                    </Border>
+                    <Border><TextBlock Text="Axis"/></Border>
+                    <Border Grid.Column="1"><TextBlock Text="P"/></Border>
+                    <Border Grid.Column="2"><TextBlock Text="I"/></Border>
+                    <Border Grid.Column="3"><TextBlock Text="D"/></Border>
+                    <Border Grid.Column="4"><TextBlock Text="Feedforward"/></Border>
+
+                    <!-- PID Rows -->
+                    <Border Grid.Row="1"><TextBlock Text="Roll"/></Border>
+                    <Border Grid.Row="1" Grid.Column="1"><TextBlock x:Name="RollP" Text="33"/></Border>
+                    <Border Grid.Row="1" Grid.Column="2"><TextBlock x:Name="RollI" Text="30.0"/></Border>
+                    <Border Grid.Row="1" Grid.Column="3"><TextBlock x:Name="RollD" Text="23.0"/></Border>
+                    <Border Grid.Row="1" Grid.Column="4"><TextBlock x:Name="RollFF" Text="15.0"/></Border>
+
+                    <Border Grid.Row="2"><TextBlock Text="Pitch"/></Border>
+                    <Border Grid.Row="2" Grid.Column="1"><TextBlock x:Name="PitchP" Text="40.0"/></Border>
+                    <Border Grid.Row="2" Grid.Column="2"><TextBlock x:Name="PitchI" Text="30.0"/></Border>
+                    <Border Grid.Row="2" Grid.Column="3"><TextBlock x:Name="PitchD" Text="23.0"/></Border>
+                    <Border Grid.Row="2" Grid.Column="4"><TextBlock x:Name="PitchFF" Text="15.0"/></Border>
+
+                    <Border Grid.Row="3"><TextBlock Text="Yaw"/></Border>
+                    <Border Grid.Row="3" Grid.Column="1"><TextBlock x:Name="YawP" Text="40.0"/></Border>
+                    <Border Grid.Row="3" Grid.Column="2"><TextBlock x:Name="YawI" Text="40.0"/></Border>
+                    <Border Grid.Row="3" Grid.Column="3"><TextBlock Text="-"/></Border>
+                    <Border Grid.Row="3" Grid.Column="4"><TextBlock x:Name="YawFF" Text="40.0"/></Border>
                 </Grid>
             </Grid>
-            <!-- Optimization button (Section 1 of main grid) -->
-            <Button Grid.Row="1" Margin="10 2" FontSize="24"
-                Content="Copy CLI commands"
+
+            <!-- Optimization Button -->
+            <Button Margin="10 2" FontSize="24"
+                    Content="Copy CLI Commands"
                     x:Name="CopyCliCommandsButton"
                     Click="CopyCliCommandsButton_Click"/>
             <Label FontSize="16" HorizontalAlignment="Center"
-                Content="Make sure to enter 'save' command and hit enter after pasting tweaking commands into CLI"/>
-
+                   Content="Make sure to enter 'save' command and hit enter after pasting tweaking commands into CLI"/>
         </StackPanel>
     </Grid>
 </Window>
